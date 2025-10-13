@@ -7,10 +7,11 @@ items : [{
     product : {type : mongoose.schema.Types.ObjectId, ref : 'Product'},
     quantity : {type : Number, required : true, min : 1}
 }],
+
 totalPrice : {type : Number, required : true},
 shippingAddress : {type : String, required : true},
 orderDate : {type : Date, default : Date.now},
-status : {type : String, enum : ['Pending','Shipped','Delivered','Cancelled'],default : 'Pending'}
+status : {type : String, enum : ['Pending','Shipped','Delivered','Cancelled','Out for Delivery'],default : 'Pending'}
 },
 {timestamps : true})
 
