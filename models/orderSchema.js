@@ -8,7 +8,7 @@ items : [{
     quantity : {type : Number, required : true, min : 1}
 }],
 
-totalPrice : {type : Number,required : true, min : 99},
+totalPrice : {type : Number,required : true, min : 1},
 shippingAddress : {type : String, required : true},
 orderDate : {type : Date, default : Date.now},
 status : {type : String, enum : ['Pending','Shipped','Delivered','Cancelled','Out for Delivery'],default : 'Pending'}
