@@ -1,6 +1,9 @@
 import express from 'express'
 import mongoose from 'mongoose'
 import 'dotenv/config'//Import the variables from .env file
+import productRouter from './routes/productRoutes.js';
+import orderRouter from './routes/orderRoutes.js';
+
 
 const app = express();//Make a server structure
 const PORT = process.env.PORT || 5000;
@@ -11,7 +14,10 @@ const MONGO_URL = process.env.MONGO_URL;
 app.use(express.json());//Use the middleware in the server -> json package opener
 
 
-//handle the requests here which comes on the various routes
+//Handle the requests here which comes through various routes
+app.use('/products',productRouter);
+
+app.use('/orders',orderRouter);
 
 
 
