@@ -1,8 +1,12 @@
 import express from 'express'
+import mongoose from 'mongoose'
 
-const productSchema = new mongoose.schema({
+
+
+
+const productSchema = new mongoose.Schema({
     name: {type: String, required: true, trim : true,minLength : 1},
-    Brand : {type: String, required: true},
+    brand : {type: String, required: true},
     price: {type: Number, required: [true,'Product Price is required'], min:[0,'Price cannot be negative']},
     description: {type: String, required: [true,'Product Description is required']},
     category: {type: String, required: true},

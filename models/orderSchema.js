@@ -2,13 +2,13 @@ import express from 'express'
 import mongoose from 'mongoose'
 
 
-const orderSchema = mongoose.schema({
+const orderSchema = mongoose.Schema({
 items : [{
-    product : {type : mongoose.schema.Types.ObjectId, ref : 'Product'},
+    product : {type : mongoose.Schema.Types.ObjectId, ref : 'Product'},
     quantity : {type : Number, required : true, min : 1}
 }],
 
-totalPrice : {type : Number, required : true},
+totalPrice : {type : Number,required : true, min : 99},
 shippingAddress : {type : String, required : true},
 orderDate : {type : Date, default : Date.now},
 status : {type : String, enum : ['Pending','Shipped','Delivered','Cancelled','Out for Delivery'],default : 'Pending'}

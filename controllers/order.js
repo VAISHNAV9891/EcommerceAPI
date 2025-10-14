@@ -6,26 +6,21 @@ const findOrderByIdService = async (orderId) => {//Helper function to get the or
 }
 
 export const placeOrder = async (req,res) => {
-    if(req.body.items.length == 0 || !req.body.shippingAddress){
-        return res.status(400).json({message : 'Order items and shipping address are required to place an order'});
+    if(req.body.items.length == 0 || !req.body.shippingAddress || !req.body.totalPrice){
+        return res.status(400).json({message : 'Order items, total price and shipping address are required to place an order !!!'});
     }
 
-    //Calculate the totalPrice of the order 
-    let price = 0;
-    for(const items in req.body.items){
-        price += items.product.price * items.quantity;
-    }
 
     try {
         const newOrder = await Order.create({
             items : req.body.items,
-            totalPrice : price,
+            totalPrice : req.body.totalPrice,
             shippingAddress : req.body.shippingAddress
         })
 
         if(!newOrder) return res.status(400).json({message : 'There is some error placing the order'});
 
-        return req.status(201).json(newOrder);//Order placed successfully
+        return res.status(201).json(newOrder);//Order placed successfully
     } catch(error){
         if (error.name === 'CastError') {
         return res.status(400).json({ 

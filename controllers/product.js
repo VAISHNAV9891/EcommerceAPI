@@ -2,7 +2,7 @@ import Product from '../models/productSchema.js'
 
 
 export const createProduct = async (req,res) => {
-    if(!req.body.name || !req.body.Brand || !req.body.price || !req.body.description || !req.body.category || !req.body.stock){
+    if(!req.body.name || !req.body.brand || !req.body.price || !req.body.description || !req.body.category || !req.body.stock){
         return res.status(400).json({message : 'All fields are required'});
     }
 
