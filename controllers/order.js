@@ -64,6 +64,10 @@ export const getSingleOrder = async (req,res) => {
 export const updateOrderStatus = async (req,res) => {
     const orderId = req.params.id;
     try {
+        const updateOrder = await findOrderByIdService(orderId);
+        if(updateOrder.status === 'Cancelled'){
+            return res.status(400).json({message : 'Order is already cancelled !!!!'});
+        }
         const updatedOrder = await Order.findByIdAndUpdate(orderId,{status : req.body.status},{new : true});
         if(!updatedOrder) return res.status(404).json({message : 'Order not found'});
         return res.status(200).json(updatedOrder);//Return the updated order with updated order status
