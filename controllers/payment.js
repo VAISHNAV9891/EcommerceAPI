@@ -50,34 +50,51 @@ export const handleStripeWebhook = async (req, res) => {
     let event;
 
     try {
-        
         event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
     } catch (err) {
         console.log(`Webhook Error: ${err.message}`);
         return res.status(400).send(`Webhook Error: ${err.message}`);
     }
 
-    
-    if (event.type === 'payment_intent.succeeded') {
-        const paymentIntent = event.data.object;
-        const orderId = paymentIntent.metadata.order_id;
-
-        
-
-       
-        try {
-            await Order.findByIdAndUpdate(orderId, { 
-                paymentStatus: 'Successful', 
-                paymentId: paymentIntent.id
-            });
-        } catch (dbError) {
-            console.error(`Database update failed for Order ${orderId}:`, dbError);
+    // Handle the specific event types
+    try {
+        switch (event.type) {
             
-            return res.status(500).json({ message: 'Database update failed' });
+            case 'payment_intent.succeeded': {
+                const paymentIntent = event.data.object;
+                const orderId = paymentIntent.metadata.order_id;
+
+                console.log(`Payment succeeded for Order: ${orderId}`);
+
+                await Order.findByIdAndUpdate(orderId, { 
+                    paymentStatus: 'Successful', 
+                    paymentId: paymentIntent.id 
+                });
+                break;
+            }
+
+            case 'payment_intent.payment_failed': {
+                const paymentIntent = event.data.object;
+                const orderId = paymentIntent.metadata.order_id;
+                const errorMessage = paymentIntent.last_payment_error?.message || "Payment Failed";
+
+                console.error(`Payment failed for Order: ${orderId}. Reason: ${errorMessage}`);
+
+                await Order.findByIdAndUpdate(orderId, { 
+                    paymentStatus: 'Failed', 
+                    paymentId: paymentIntent.id
+                });
+                break;
+            }
+
+            default:
+                console.log(`Unhandled event type ${event.type}`);
         }
+    } catch (dbError) {
+        console.error(`Database update failed:`, dbError);
+        return res.status(500).json({ message: 'Internal Server Error during DB update' });
+    }
 
-    } 
-
-    
+    // Return a 200 response to acknowledge receipt of the event
     res.status(200).json({ received: true });
 };
