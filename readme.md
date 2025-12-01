@@ -130,7 +130,7 @@ To facilitate quick testing of the features, use these pre-configured accounts:
 | **Orders** | `POST` | `/api/orders` | Place a new order | **User** |
 | **Reviews** | `POST` | `/api/reviews` | Add a product review | **User** |
 | **Payment** | `POST` | `/api/payment/createPaymentEnv` | Initiate Stripe Payment | **User** |
-| | `POST` | `/api/payment/` | Stripe Event Listener(webhook handling) | **Stripe** |
+| | `POST` | `/api/webhook` | Stripe Event Listener(webhook handling) | **Stripe** |
 
 
 ## 🏗️ System Flow Diagram
