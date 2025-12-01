@@ -49,7 +49,7 @@ I have carefully selected the following libraries to build a secure and efficien
 ### 1. 📦 Advanced Order Management (Order-First Flow)
 * **Optimistic Ordering:** Orders are created with a `Pending` status *before* payment. This ensures that if a payment fails or the user drops off, the cart data is preserved as an order attempt.
 * **Inventory Locking:** Stock is reserved immediately upon order creation to prevent "Race Conditions" (e.g., two users buying the last item simultaneously).
-* **Cancellation Policy:** Logic implemented to allow users to cancel orders only if they haven't been processed yet.
+* **Cancellation Policy:** The Logic let users cancel their order, only then if it is not shipped yet.
 
 ### 2. 💳 Real-Time Payments (Stripe)
 * **Secure Webhooks:** The system listens for `payment_intent.succeeded` events directly from Stripe servers.
@@ -74,7 +74,7 @@ Granular permission levels implemented via custom middleware:
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/YOUR_USERNAME/EcommerceAPI.git
+git clone https://github.com/VAISHNAV9891/EcommerceAPI.git
 cd EcommerceAPI
 ```
 ### 2. Install Dependencies
@@ -118,6 +118,20 @@ To facilitate quick testing of the features, use these pre-configured accounts:
 | **Admin** | `admin@demo.com` | `admin123` | Create Products, View All Orders, Update order status, delete Reviews |
 | **User** | `user@demo.com` | `user123` | Shop, Add to Cart, Checkout, Cancel Orders until shipping |
 
+## 📡 API Endpoints Snapshot
+
+**Note:** Below is a highlight of the key features. For the full list of **20+ endpoints** (including Admin controls , fetching orders etc), please refer to the [**Postman Documentation**]( INSERT_POSTMAN_LINK_HERE ).
+
+| Module | Method | Endpoint | Description | Access |
+| :--- | :--- | :--- | :--- | :--- |
+| **Auth** | `POST` | `/api/users/signup` | Register a new user | Public |
+| | `POST` | `/api/users/login` | Login & generate JWT | Public |
+| **Cart** | `POST` | `/api/cart/myCart` | Add item to cart | **User** |
+| **Orders** | `POST` | `/api/orders` | Place a new order | **User** |
+| **Reviews** | `POST` | `/api/reviews` | Add a product review | **User** |
+| **Payment** | `POST` | `/api/payment/createPaymentEnv` | Initiate Stripe Payment | **User** |
+| | `POST` | `/api/payment/` | Stripe Event Listener(webhook handling) | **Stripe** |
+
 
 ## 🏗️ System Flow Diagram
  
@@ -133,21 +147,24 @@ graph TD
     API -- "6. Verify Signature" --> API
     API -- "7. Update payment Status to successful" --> DB
 ```
+## 🔮 Future Improvements (Roadmap)
+
+While the current V1 focuses on core commerce and payment logic, here is the roadmap for upcoming features:
+
+* [ ] **User Profile Management:** Allow users to update profile details and manage addresses.
+* [ ] **Cloudinary Integration:** Replace image URL strings with actual file uploads via Multer.
+* [ ] **Admin Dashboard:** Build a React-based frontend for visual inventory management.
+* [ ] **Redis Caching:** Implement caching for the required endpoints to reduce database load.
+* [ ] **Email Notifications:** Integrate Nodemailer to send order confirmation emails.
 
 ## 👨‍💻 Author
-
 **Vaishnav Khanna**
-
-* 💼 **LinkedIn:** [ INSERT_LINKEDIN_LINK ]
-* 🐙 **GitHub:** [ INSERT_GITHUB_LINK ]
 
 ---
 
 
-### 🤝 Support
+
 If you found this API architecture useful or learned something new, please consider giving the repository a **Star** ⭐️.
-
-
 
 
 
