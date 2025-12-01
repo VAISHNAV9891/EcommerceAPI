@@ -8,12 +8,15 @@ import reviewRouter from './routes/reviewRoutes.js'
 import paymentRouter from './routes/paymentRoutes.js'
 import webhookRouter from './routes/webhookRoutes.js'
 import cartRouter from './routes/cartRoutes.js'
-import { authLimiter, paymentLimiter, generalLimiter } from './middlewares/rateLimiters.js';
+import { authLimiter, paymentLimiter, generalLimiter } from './middlewares/rateLimiters.js'
+import cors from 'cors'
 
 
 const app = express();//Make a server structure
 const PORT = process.env.PORT || 5000;
 const MONGO_URL = process.env.MONGO_URL;
+
+app.use(cors());
 
 app.use('/api/webhook', webhookRouter);
 app.use(express.json());//Use the middleware in the server -> json package opener
