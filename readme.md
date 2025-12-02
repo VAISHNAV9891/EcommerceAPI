@@ -8,7 +8,7 @@
 ## Note: The server is hosted on a free tier service (Render). Please allow 30-50 seconds for the initial request to wake up the server.
 ## 🚀 Live Demonstration
 
-* **🌐 Live Server (Render):** [ INSERT_YOUR_RENDER_URL_HERE ]
+* **🌐 Live Server (Render):** https://ecommerceapi-nh2j.onrender.com
 * **📄 API Documentation (Postman):** [ INSERT_YOUR_POSTMAN_PUBLIC_LINK_HERE ]
 
 ---
