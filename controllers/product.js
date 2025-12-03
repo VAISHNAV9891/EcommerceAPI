@@ -10,7 +10,7 @@ export const createProduct = async (req,res) => {
         }
         
          const newProduct = await Product.create(req.body);
-         return res.status(201).json(newProduct);
+         return res.status(201).json({message : 'Product created successfully',newProduct});
 
     } catch(error) {
         if(error.name === 'CastError'){
@@ -73,7 +73,7 @@ try {
     const updatedProduct = await Product.findByIdAndUpdate(productId,req.body,{new : true});
     if(!updatedProduct) return res.status(404).json({message : 'Product not found'});
 
-    return res.status(200).json(updatedProduct);
+    return res.status(200).json({message : 'Product updated successfully',updatedProduct});
 } catch(error) {
     if(error.name === 'CastError'){
         return res.status(400).json({message : 'Id or data is given in the invalid format !',error : error.message});
