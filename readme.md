@@ -8,7 +8,7 @@
 ## Note: The server is hosted on a free tier service (Render). Please allow 30-50 seconds for the initial request to wake up the server.
 ## 🚀 Live Demonstration
 
-* **🌐 Live Server (Render):** [ INSERT_YOUR_RENDER_URL_HERE ]
+* **🌐 Live Server (Render):** https://ecommerceapi-nh2j.onrender.com
 * **📄 API Documentation (Postman):** [ INSERT_YOUR_POSTMAN_PUBLIC_LINK_HERE ]
 
 ---
@@ -130,7 +130,7 @@ To facilitate quick testing of the features, use these pre-configured accounts:
 | **Orders** | `POST` | `/api/orders` | Place a new order | **User** |
 | **Reviews** | `POST` | `/api/reviews` | Add a product review | **User** |
 | **Payment** | `POST` | `/api/payment/createPaymentEnv` | Initiate Stripe Payment | **User** |
-| | `POST` | `/api/payment/` | Stripe Event Listener(webhook handling) | **Stripe** |
+| | `POST` | `/api/webhook` | Stripe Event Listener(webhook handling) | **Stripe** |
 
 
 ## 🏗️ System Flow Diagram
