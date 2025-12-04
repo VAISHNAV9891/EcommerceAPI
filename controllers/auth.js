@@ -14,6 +14,10 @@ try{
         return res.status(400).json({message : 'All fields are required'});        
     }
 
+    if(password.length < 8){
+        return res.status(400).json({message : 'Password must be 8 characters long'});
+    }
+
     //Check if the user with the given email-id already Exists (email-id is acting as a primary key here)
     const existingUserEmail = await User.findOne({email : email});
     const existingUserUsername = await User.findOne({username : username});
