@@ -67,7 +67,7 @@ export const getCart = async (req,res) => {
 
         if(!cart) return res.status(404).json({message : 'Cart not found for this user'});
 
-        return res.status(200).json(cart);
+        return res.status(200).json({message : 'Cart fetched successfully',cart});
 
     } catch(error){
         if(error.name === 'CastError'){
