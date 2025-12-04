@@ -23,7 +23,7 @@ const seedUsers = async () => {
         const salt = await bcrypt.genSalt(10);
         const adminPassword = await bcrypt.hash('admin123', salt);
         const userPassword = await bcrypt.hash('user123', salt);
-
+        
         
         const users = [
             {

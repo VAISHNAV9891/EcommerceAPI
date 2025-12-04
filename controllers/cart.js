@@ -45,7 +45,7 @@ export const addToCart = async (req,res) => {
             { path: 'items.product'}
             ]);
            
-            return res.status(200).json(cart);
+            return res.status(200).json({message : 'Item is successfully added to the cart',cart});
 
     }catch(error){
         if (error.name === 'CastError') {
