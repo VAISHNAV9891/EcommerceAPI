@@ -150,11 +150,11 @@ export const deleteItemFromCart = async (req,res) => {
         await cart.save();
 
         await cart.populate([
-            {path : 'user'},
+            {path : 'user', select : '-password'},
             {path : 'items.product'}
         ]);
 
-        return res.status(200).json({message : 'Cart is updated successfully', cart});
+        return res.status(200).json({message : 'Item is removed from the cart', cart});
     } catch(error){ 
         if(error.name === 'CastError'){
             return res.status(400).json({message : 'Data is provided in the invalid format.'});
