@@ -39,7 +39,7 @@ const newReview = await Review.create({
 
 
 await newReview.populate([
-  {path : 'userId'},
+  {path : 'userId', select : '-password'},
   {path : 'productId'}
 ])
 
@@ -77,7 +77,7 @@ if(!product) return res.status(404).json({message : 'Product not found'});
 const all_reviews = await Review.find(filter)
 .sort({_id : 1})
 .limit(limit)
-.populate('userId')
+.populate('userId','-password')
 .populate('productId');
 
 const nextCursor = (all_reviews.length == limit)? all_reviews[all_reviews.length - 1]._id : null;
@@ -101,7 +101,7 @@ export const getSingleReview = async (req,res) => {
     const id = req.params.id;
 
     const review = Review.findById(id)
-    .populate('userId')
+    .populate('userId','-password')
     .populate('productId');
 
     if(!review) return res.status(404).json({message : 'Review not found'});
@@ -131,7 +131,7 @@ export const updateReview = async (req,res) => {
      if(comment) updateData.comment = comment;
 
     const updatedReview = await Review.findOneAndUpdate({_id : reviewId,userId : userId},updateData,{new : true,runValidators : true})
-    .populate('userId')
+    .populate('userId','-password')
     .populate('productId');
 
 
