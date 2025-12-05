@@ -3,7 +3,7 @@ import Product from '../models/productSchema.js'
 import Cart from '../models/cartSchema.js'
 
 
-//User only
+//Customer only
 export const addToCart = async (req,res) => {
 
     try {
@@ -119,7 +119,7 @@ export const updateCart = async (req, res) => {
         ]);
        
 
-        return res.status(200).json({message : 'item quantity is updated sucessfully',cart});
+        return res.status(200).json({message : 'item quantity is updated',cart});
 
     } catch (error) {
         if (error.name === 'CastError') {
@@ -198,7 +198,7 @@ export const getAllCarts = async (req,res) => {
             return res.status(404).json({ message: 'No active carts found' });
         }
 
-        return res.status(200).json(carts);
+        return res.status(200).json({message : 'Carts fetched successfully',carts});
     } catch(error){
         if(error.name == 'CastError'){
             return res.status(400).json({message : 'Data is provided in the invalid format'});
