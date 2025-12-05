@@ -38,7 +38,7 @@ export const addToCart = async (req,res) => {
 
             
             cart.items.push({ product: product, quantity: 1 });
-            await cart.save()
+            await cart.save();
 
             await cart.populate([
             { path: 'user', select : '-password'},
