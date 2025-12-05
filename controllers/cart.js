@@ -119,7 +119,7 @@ export const updateCart = async (req, res) => {
         ]);
        
 
-        return res.status(200).json(cart);
+        return res.status(200).json({message : 'item quantity is updated sucessfully',cart});
 
     } catch (error) {
         if (error.name === 'CastError') {
