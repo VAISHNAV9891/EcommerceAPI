@@ -219,7 +219,7 @@ export const getSingleCart = async (req,res) => {
             return res.status(404).json({message : 'Cart not found'});
         }
 
-        return res.status(200).json(cart);
+        return res.status(200).json({message: 'Cart fetched sucessfully',cart});
     } catch(error){
         if(error.name == 'CastError'){
             return res.status(400).json({message : 'Data is provided in the invalid format'});
