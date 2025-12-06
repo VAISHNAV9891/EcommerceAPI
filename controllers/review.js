@@ -141,7 +141,7 @@ export const updateReview = async (req,res) => {
       return res.status(404).json({message : 'Review not found or Cannot update this review !!!'});
     }
 
-    return res.status(200).json(updatedReview);
+    return res.status(200).json({message : 'Review updated successfully',updatedReview});
 
   }catch(error){
     if(error.name === 'CastError'){
