@@ -100,7 +100,7 @@ export const getSingleReview = async (req,res) => {
   try {
     const id = req.params.id;
 
-    const review = Review.findById(id)
+    const review = await Review.findById(id)
     .populate('userId','-password')
     .populate('productId');
 
