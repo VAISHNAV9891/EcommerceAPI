@@ -163,6 +163,11 @@ export const updateOrderStatus = async (req,res) => {
     try {
         const orderId = req.params.id;
         const updateOrder = await findOrderByIdService(orderId);
+        if (updateOrder.status === req.body.status) {
+        return res.status(400).json({
+        message: `Order is already in ${req.body.status} status !`
+        });
+        }
 
         if(updateOrder.status === 'Cancelled'){
             return res.status(400).json({message : 'Order is already cancelled !!!!'});
