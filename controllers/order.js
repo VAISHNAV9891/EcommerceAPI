@@ -143,7 +143,7 @@ export const getSingleOrder = async (req, res) => {
 
        
         // Allow if the user is an admin OR if the user owns this order
-        if (loggedInUserRole === 'Admin' || order.user.toString() === loggedInUserId) {
+        if (loggedInUserRole === 'Admin' || order.user._id.toString() === loggedInUserId) {
             // User is authorized
             return res.status(200).json(order);
         } else {
