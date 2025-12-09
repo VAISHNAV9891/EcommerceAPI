@@ -175,7 +175,7 @@ export const updateOrderStatus = async (req,res) => {
 
         if(!updatedOrder) return res.status(404).json({message : 'Order not found'});
 
-        return res.status(200).json(updatedOrder);//Return the updated order with updated order status
+        return res.status(200).json({message : 'Status updated successfully',updatedOrder});//Return the updated order with updated order status
 
     } catch(error) {
         if(error.name === 'CastError'){
