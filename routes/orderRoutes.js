@@ -21,7 +21,7 @@ orderRouter.get('/',tokenVerifier,getAllOrders);
 orderRouter.get('/:id',tokenVerifier,getSingleOrder);
 orderRouter.patch('/:id',tokenVerifier,isAdmin,updateOrderStatus);//Update order status -> Admin only
 orderRouter.patch('/:id/cancelOrderByAdmin',tokenVerifier,isAdmin,cancelOrder);//Cancel order -> Admin only using RBAC(Role-Based access control)
-orderRouter.patch('/:id/cancelOrderByUser',tokenVerifier,checkOrderOwnership,cancelOrder);//Cancel order -> By User
+orderRouter.patch('/:id/cancelOrderByCustomer',tokenVerifier,checkOrderOwnership,cancelOrder);//Cancel order -> By User
 
 
 
