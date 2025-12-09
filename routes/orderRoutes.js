@@ -17,7 +17,7 @@ const orderRouter  = express.Router();
 
 
 orderRouter.post('/',tokenVerifier,placeOrder);
-orderRouter.get('/',tokenVerifier,getAllOrders);//Only done by the admin
+orderRouter.get('/',tokenVerifier,getAllOrders);
 orderRouter.get('/:id',tokenVerifier,getSingleOrder);
 orderRouter.patch('/:id',tokenVerifier,isAdmin,updateOrderStatus);//Update order status -> Admin only
 orderRouter.patch('/:id/cancelOrderByAdmin',tokenVerifier,isAdmin,cancelOrder);//Cancel order -> Admin only using RBAC(Role-Based access control)

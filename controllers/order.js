@@ -115,6 +115,7 @@ export const getAllOrders = async (req,res) => {
     const nextCursor  = (orders.length == limit)? orders[orders.length() - 1]._id : null;
 
     res.status(200).json({
+        message : 'Orders fetched successfully',
         orders,
         nextCursor
     });
