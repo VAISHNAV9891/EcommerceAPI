@@ -38,7 +38,7 @@ export const getAllProducts = async (req,res) => {
         .sort({_id : 1})
         .limit(limit);
 
-        const nextCursor = (products.length == limit) ? products[products.length() - 1]._id : null;
+        const nextCursor = (products.length == limit) ? products[products.length - 1]._id : null;
 
        
 
