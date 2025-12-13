@@ -190,15 +190,35 @@ export const emptyTheWholeCart = async (req, res) => {
 //Admin only 
 export const getAllCarts = async (req,res) => {
     try {
-        const carts = await Cart.find({})
-        .populate('user')
-        .populate('items.product');
+        const limit  = parseInt(req.query.limit) || 10;
+        const cursor = req.query.cursor;
+        let filter = {};
+
+        if(cursor){
+            filter = {_id : {$gt : cursor}};
+        }
+        const carts = await Cart.find(filter)
+        .sort({_id : 1})
+        .limit(limit + 1);
+
 
         if (carts.length === 0) {
             return res.status(404).json({ message: 'No active carts found' });
         }
 
-        return res.status(200).json({message : 'Carts fetched successfully',carts});
+        const nextCursor = (carts.length == limit + 1)? carts[carts.length - 2]._id : null;
+        if(carts.length == limit + 1){
+         carts.pop();   
+        }
+        
+
+        await Cart.populate(carts, [
+            { path: 'user', select: '-password' }, 
+            { path: 'items.product'}
+        ]);
+
+
+        return res.status(200).json({message : 'Carts fetched successfully', carts, nextCursor : nextCursor});
     } catch(error){
         if(error.name == 'CastError'){
             return res.status(400).json({message : 'Data is provided in the invalid format'});
