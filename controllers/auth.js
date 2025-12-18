@@ -6,6 +6,7 @@ import 'dotenv/config'//Import the variables from the .env file
 
 
 
+
 export const sign_up = async (req,res) => {
 try{
     const {username,email,password} = req.body;
@@ -134,4 +135,27 @@ try {
 }
 
 }
+
+
+export const googleCallback = (req, res) => {
+  try {
+    const user = req.user;
+
+    
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET_KEY, {
+      expiresIn: '3d',
+    });
+
+   
+    res.status(200).json({
+      success: true,
+      message: "Google Login Successful",
+      token,
+      user
+    });
+
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
 

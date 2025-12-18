@@ -10,6 +10,9 @@ import webhookRouter from './routes/webhookRoutes.js'
 import cartRouter from './routes/cartRoutes.js'
 import { authLimiter, paymentLimiter, generalLimiter } from './middlewares/rateLimiters.js'
 import cors from 'cors'
+import passport from 'passport'
+import './config/passport.js';
+
 
 
 const app = express();//Make a server structure
@@ -18,9 +21,11 @@ const MONGO_URL = process.env.MONGO_URL;
 
 app.use(cors());
 
+
+
 app.use('/api/webhook', webhookRouter);
 app.use(express.json());//Use the middleware in the server -> json package opener
-
+app.use(passport.initialize());
 
 //Handle the requests here which comes through various routes
 app.use('/api/products', generalLimiter, productRouter);
