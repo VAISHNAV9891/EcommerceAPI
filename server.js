@@ -10,6 +10,7 @@ import webhookRouter from './routes/webhookRoutes.js'
 import cartRouter from './routes/cartRoutes.js'
 import { authLimiter, paymentLimiter, generalLimiter } from './middlewares/rateLimiters.js'
 import cors from 'cors'
+import ExpressMongoSanitize from 'express-mongo-sanitize'
 
 
 const app = express();//Make a server structure
@@ -20,7 +21,7 @@ app.use(cors());
 
 app.use('/api/webhook', webhookRouter);
 app.use(express.json());//Use the middleware in the server -> json package opener
-
+app.use(ExpressMongoSanitize());
 
 //Handle the requests here which comes through various routes
 app.use('/api/products', generalLimiter, productRouter);
