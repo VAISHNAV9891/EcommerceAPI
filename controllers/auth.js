@@ -32,8 +32,8 @@ try{
     //Now,it is guranteed that the current user trying to signing up, is the new user !!! => So, Please signup the user and store that credentials in your database for future verification
     
     //Now,Third Step is to hash the password
-    const salt =  await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password,salt);
+    const salt =  bcrypt.genSalt(10);
+    const hashedPassword =  bcrypt.hash(password,salt);
 
 
 
@@ -96,7 +96,7 @@ try {
     //User exists with the given email/username -> if comparsion of passwords(HashedPasswords) become true -> log the user in else don't login the user as user has given wrong password !!!
     
     //Compare the provided password with the stored hash
-    const isMatch = await bcrypt.compare(password,user.password);
+    const isMatch = bcrypt.compare(password,user.password);
 
     if(!isMatch){
         //Password doesn't match
