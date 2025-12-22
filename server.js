@@ -12,6 +12,7 @@ import { authLimiter, paymentLimiter, generalLimiter } from './middlewares/rateL
 import cors from 'cors'
 import passport from 'passport'
 import './config/passport.js';
+import ExpressMongoSanitize from 'express-mongo-sanitize'
 
 
 
@@ -25,6 +26,7 @@ app.use(cors());
 
 app.use('/api/webhook', webhookRouter);
 app.use(express.json());//Use the middleware in the server -> json package opener
+app.use(ExpressMongoSanitize());
 app.use(passport.initialize());
 
 //Handle the requests here which comes through various routes
