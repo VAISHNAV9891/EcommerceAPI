@@ -4,7 +4,7 @@ const userSchema = new mongoose.Schema({
     orders : [{type : mongoose.Schema.Types.ObjectId, ref : 'Order'}],
     username : {type : String, required : true, unique : true},
     email : {type : String, required : true, unique : true},
-    password : {type : String, minLength : [8,'Password must be at least 8 characters long']},
+    password : {type : String, minLength : [8,'Password must be at least 8 characters long'], select : false},
     role : {type : String, enum : ['Customer','Admin','Seller','DeliveryBoy'], default : 'Customer'},
     cart : {type : mongoose.Schema.Types.ObjectId, ref : 'Cart'},
     googleId : {type : String, default : null}

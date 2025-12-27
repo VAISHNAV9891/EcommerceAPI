@@ -8,6 +8,7 @@ import reviewRouter from './routes/reviewRoutes.js'
 import paymentRouter from './routes/paymentRoutes.js'
 import webhookRouter from './routes/webhookRoutes.js'
 import cartRouter from './routes/cartRoutes.js'
+import userRouter from './routes/userRoutes.js'
 import { authLimiter, paymentLimiter, generalLimiter } from './middlewares/rateLimiters.js'
 import cors from 'cors'
 import passport from 'passport'
@@ -36,6 +37,7 @@ app.use('/api/users', authLimiter, authRouter);
 app.use('/api/reviews', generalLimiter, reviewRouter);
 app.use('/api/payment', paymentLimiter, paymentRouter);
 app.use('/api/cart', generalLimiter, cartRouter);
+app.use('/api/user', generalLimiter, userRouter);
 
 
 

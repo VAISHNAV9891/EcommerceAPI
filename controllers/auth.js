@@ -88,7 +88,7 @@ try {
     }
 
     //Check if the user with given credentials exists or not.
-    const user = await User.findOne({$or : [{username : username},{email : email}]});
+    const user = await User.findOne({$or : [{username : username},{email : email}]}).select('+password');
     if(!user){
         return res.status(404).json({message : 'No user is associated with the given credentials, Please trying Signup !!!'});
     }
