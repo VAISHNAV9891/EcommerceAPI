@@ -32,8 +32,8 @@ try{
     //Now,it is guranteed that the current user trying to signing up, is the new user !!! => So, Please signup the user and store that credentials in your database for future verification
     
     //Now,Third Step is to hash the password
-    const salt =  bcrypt.genSalt(10);
-    const hashedPassword =  bcrypt.hash(password,salt);
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password,salt);
 
 
 
