@@ -7,9 +7,11 @@ const userSchema = new mongoose.Schema({
     password : {type : String, minLength : [8,'Password must be at least 8 characters long'], select : false},
     role : {type : String, enum : ['Customer','Admin','Seller','DeliveryBoy'], default : 'Customer'},
     cart : {type : mongoose.Schema.Types.ObjectId, ref : 'Cart'},
-    googleId : {type : String, default : null}
+    googleId : {type : String, default : null},
+    isDeleted : {type : Boolean, default : false},
+    isVerified : {type : Boolean, default : false}
 },
-{timestamps : true}//Important Thing
+{timestamps : true, select : false}//Important Thing
 )
 
 const User = mongoose.model('User',userSchema);

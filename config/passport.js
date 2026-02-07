@@ -14,18 +14,18 @@ passport.use(new GoogleStrategy({
       let user = await User.findOne({ email: profile.emails[0].value });
 
       if (user) {
-        
+        if(!user.isVerified) user.isVerified = true;
         if (!user.googleId) {
           user.googleId = profile.id;
           await user.save();
         }
         return done(null, user);
       } else {
-        
         const newUser = await User.create({
           name: profile.displayName,
           email: profile.emails[0].value,
           googleId: profile.id,
+          isVerified :  true
         });
         return done(null, newUser);
       }

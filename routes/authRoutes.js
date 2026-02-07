@@ -4,7 +4,10 @@ import passport from 'passport';
 import {
     sign_up,
     login,
-    googleCallback
+    googleCallback,
+    forgetPassword,
+    resetPassword,
+    verifyEmail
 } from '../controllers/auth.js'
 
 
@@ -12,6 +15,7 @@ import {
 const router = express.Router();
 
 router.post('/signup',sign_up);
+router.post('/signup/verify-email/:rawToken',verifyEmail);
 router.post('/login', login);
 //This endpoint hits when the user clicks the login button
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
@@ -23,5 +27,8 @@ router.get(
   passport.authenticate('google', { session: false, failureRedirect: '/login' }),
   googleCallback 
 );
+
+router.post('/forget-password', forgetPassword);
+router.post('/reset-password/:token', resetPassword);
 
 export default router;

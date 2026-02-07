@@ -33,11 +33,12 @@ app.use(passport.initialize());
 //Handle the requests here which comes through various routes
 app.use('/api/products', generalLimiter, productRouter);
 app.use('/api/orders', generalLimiter, orderRouter);
-app.use('/api/users', authLimiter, authRouter);
+app.use('/api/auth', authLimiter, authRouter);
 app.use('/api/reviews', generalLimiter, reviewRouter);
 app.use('/api/payment', paymentLimiter, paymentRouter);
 app.use('/api/cart', generalLimiter, cartRouter);
 app.use('/api/user', generalLimiter, userRouter);
+
 
 
 
@@ -53,4 +54,3 @@ mongoose.connect(MONGO_URL).then(() => {
 }).catch((error) => {
      console.error("There's some error connecting to the database :", error);
 })
-
