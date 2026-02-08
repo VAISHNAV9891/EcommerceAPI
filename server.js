@@ -22,6 +22,7 @@ const PORT = process.env.PORT || 5000;
 const MONGO_URL = process.env.MONGO_URL;
 
 app.use(cors());
+app.set('trust proxy', 1);
 
 
 
