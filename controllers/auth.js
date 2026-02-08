@@ -78,7 +78,7 @@ try{
     })
 
     //Generate the link that we have to send to the user
-    const domain = process.env.FRONTEND_URL || 'http://localhost:5000';
+    const domain = process.env.FRONTEND_URL || 'https://ecommerceapi-nh2j.onrender.com';
     const link   = `${domain}/api/auth/signup/verify-email/${rawToken}`;
     
     //Send the email using nodemailer
