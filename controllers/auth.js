@@ -82,7 +82,11 @@ try{
     const link   = `${domain}/api/auth/signup/verify-email/${rawToken}`;
     
     //Send the email using nodemailer
-    await sendMailService(link,newUser.email,'EMAIL_VERIFY');
+    const isSent = await sendMailService(link,newUser.email,'EMAIL_VERIFY');
+
+    if(!isSent){
+      return res.status(503).json({message : 'Cannot send mail,please try again later.'});
+    }
 
 
     //Send a success response (Don't send the password back)
@@ -269,8 +273,13 @@ export const forgetPassword = async (req, res) => {
     const domain = process.env.FRONTEND_URL || 'http://localhost:5000';
     const link = `${domain}/api/auth/reset-password/${rawToken}`;
 
-    console.log("Found User:", user.email); // This should now be correct
-    await sendMailService(link, user.email, 'RESET_PASSWORD');
+    
+
+    const isSent = await sendMailService(link, user.email, 'RESET_PASSWORD');
+
+    if(!isSent){
+      return res.status(503).json({message : 'Cannot send mail,please try again later.'});
+    }
 
     return res.status(200).json({
       message: 'If the account exists, a reset email has been sent'

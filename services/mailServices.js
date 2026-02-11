@@ -1,20 +1,24 @@
 import nodemailer from 'nodemailer';
 import 'dotenv/config';
 
+
+
 export const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
+  host: "smtp.sendgrid.net",
   port: 587,
   secure: false,
   auth: {
-    user: process.env.MAIL_USER,
-    pass: process.env.MAIL_PASS
-  }
+    user: "apikey", 
+    pass: process.env.SENDGRID_API_KEY,
+  },
 });
 
+
 export const sendMailService = async (link, to, purpose) => {
-  let subject, text, html;
-  console.log(process.env.MAIL_USER);
-  console.log(process.env.MAIL_PASS);
+  
+  try{
+    let subject, text, html;
+
   if(purpose === 'RESET_PASSWORD') {
     subject = "Password Reset Request";
     text = `Click here to reset your password: ${link}`;
@@ -26,13 +30,20 @@ export const sendMailService = async (link, to, purpose) => {
   }
 
   const info = await transporter.sendMail({
-    from: process.env.MAIL_USER,
+    from: process.env.SENDGRID_FROM,
     to : to,
     subject,
     text,
     html
   });
 
+  return true;
   console.log("Message sent:", info.messageId);
+  }catch(error){
+    console.error("There's some error sending email !", error.message);
+    return false;
+  }
+  
+  
 };
 
