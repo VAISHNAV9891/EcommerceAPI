@@ -270,7 +270,7 @@ export const forgetPassword = async (req, res) => {
       expiresAt: Date.now() + 15 * 60 * 1000
     });
 
-    const domain = process.env.FRONTEND_URL || 'http://localhost:5000';
+    const domain = process.env.FRONTEND_URL || 'https://ecommerceapi-nh2j.onrender.com';
     const link = `${domain}/api/auth/reset-password/${rawToken}`;
 
     
