@@ -5,8 +5,8 @@ import 'dotenv/config';
 
 export const transporter = nodemailer.createTransport({
   host: "smtp.sendgrid.net",
-  port: 465,
-  secure: true,
+  port: 587,
+  secure: false,
   auth: {
     user: "apikey", 
     pass: process.env.SENDGRID_API_KEY,
@@ -38,7 +38,7 @@ export const sendMailService = async (link, to, purpose) => {
   });
 
 
-  console.log("Message sent:", info.messageId);
+  console.log("Mail sent:", info.messageId);
   return true;
   }catch(error){
     console.error("There's some error sending email !", error.message);
