@@ -123,7 +123,7 @@ try{
     return res.status(400).json({message : 'Invalid or expired token.'});
    }
 
-   const user = await User.findByIdAndUpdate(tokenDoc.userId,{isEmailVerified : true},{new : true});
+   const user = await User.findByIdAndUpdate(tokenDoc.userId,{isVerified : true},{new : true});
 
    return res.status(201).json({
     message : 'User sign-up successful, you can now login to your account.',
@@ -321,7 +321,10 @@ export const resetPassword = async (req, res) => {
 
     //Update password
     const user = await User.findById(tokenDoc.userId);
-    user.password = newPassword; // hashed in pre-save hook
+    const salt = await bcrypt.genSalt(10);
+
+    const hashedPassword = await bcrypt.hash(newPassword,salt);
+    user.password = hashedPassword; // Save the hashed password in the database -> Best practice
     await user.save();
 
     //Mark token as used
