@@ -1,15 +1,17 @@
-import User from '../models/userSchema.js'
-import Cart from '../models/cartSchema.js'
-import bcrypt from 'bcrypt'
-import jwt from 'jsonwebtoken'
-import { sendMailService } from '../services/mailServices.js'
-import Token from '../models/tokenSchema.js'
-import 'dotenv/config'//Import the variables from the .env file 
-import validator from 'email-validator'
-import crypto, { verify } from 'crypto'
-import { authLimiter } from '../middlewares/rateLimiters.js'
-
-
+import User from '../models/userSchema.js';
+import Cart from '../models/cartSchema.js';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import { sendMailService } from '../services/mailServices.js';
+import Token from '../models/tokenSchema.js';
+import 'dotenv/config';//Import the variables from the .env file 
+import validator from 'email-validator';
+import crypto, { verify } from 'crypto';
+import { authLimiter } from '../middlewares/rateLimiters.js';
+import qrcode from 'qrcode';
+import { generateSecret, generateURI, verifySync } from 'otplib';
+import generateEmailOTP from '../services/otpServices.js';
+import Otp from '../models/otpSchema.js';
 
 
 export const sign_up = async (req,res) => {
@@ -101,7 +103,7 @@ try{
   return res.status(500).json({message : 'Internal server error', error : error.message});
 }
 
-}
+};
 
 export const verifyEmail = async (req,res) => {
 try{
@@ -144,7 +146,7 @@ try{
 
   return res.status(500).json({message : 'Internal Server Error'});
 }
-}
+};
 
 export const login = async (req, res) => {
   try {
@@ -169,7 +171,7 @@ export const login = async (req, res) => {
     }
 
     // 3. Find User
-    const user = await User.findOne({ $or: criteria }).select('+password');
+    const user = await User.findOne({ $or: criteria }).select('+password +isTwoFactorEnabled +twoFactorSecret');
 
     if (!user) {
       return res.status(404).json({ 
@@ -200,8 +202,40 @@ export const login = async (req, res) => {
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
-    // //User validation successful, so now reset the rate-limiter counter for this user
+
+    //User validation successful, so now reset the rate-limiter counter for this user
     authLimiter.resetKey(req.ip);
+
+    //if user's two factor is enabled then asks the user to hit the api route to verify the OTP
+    //Later when we got the frontend in our web application then, we'll redirect the user to the "OTP Input" page and then that page has a button named "verify OTP", so when user clicks that button then it'll automatically hit the verify OTP route
+    if(user.isTwoFactorEnabled && user.twoFactorType === 'APP'){
+      return res.status(200).json({
+        message : 'APP-Based Two-Factor Authentication required.',
+        userId : user._id
+      });
+    }else if(user.isTwoFactorEnabled && user.twoFactorType === 'EMAIL'){
+       //Generate Otp
+       const otp = generateEmailOTP();
+
+       //Hash the Otp
+       const salt = await bcrypt.genSalt(10);
+       const hashedOtp = await bcrypt.hash(otp,salt);
+       
+       //Save the Otp document in the database
+       const otpDoc = await Otp.create({
+        userId : user._id,
+        otp : hashedOtp
+       });
+
+       //Send the otp to this user on the email
+       const isSent = await sendMailService(otp,user.email,'TWO_FACTOR_AUTH');
+
+       if(!isSent){
+          return res.status(503).json({message : 'Cannot send mail,please try again later.'});
+       }
+
+       return res.status(200).json({message : 'OTP has been sended to the email.', userId : user._id});
+    }
 
 
     //Generate Token
@@ -212,7 +246,7 @@ export const login = async (req, res) => {
     );
 
     //Success Response
-    res.status(200).json({
+    return res.status(200).json({
       message: 'Login successful!',
       token: token,
       user: {
@@ -338,6 +372,241 @@ export const resetPassword = async (req, res) => {
   }
 };
 
+export const enable2FA = async (req,res) => {
+  try{
+    const type = req.body.type;
+    const userId = req.user.id;
+
+    //Important check
+    if(type !== 'EMAIL' && type !== 'APP'){
+      return res.status(400).json({message : 'Invalid Two-Factor Authentication type,Change the type to valid values mentioned in the docs and try again.'});
+    }
+
+    const user = await User.findById(userId);
+
+    //Important check
+    if(user.isTwoFactorEnabled){
+      return res.status(400).json({message : 'Two-Factor Authentication is already enabled.'});
+    }
+
+    if(type === 'EMAIL'){
+      //Generate Otp
+       const otp = generateEmailOTP();
+
+       //Hash the Otp
+       const salt = await bcrypt.genSalt(10);
+       const hashedOtp = await bcrypt.hash(otp,salt);
+       
+       //Save the Otp document in the database
+       const otpDoc = await Otp.create({
+        userId : req.user.id,
+        otp : hashedOtp
+       });
+
+       //Send the otp to this user on the email
+       const isSent = await sendMailService(otp,user.email,'TWO_FACTOR_AUTH');
+
+       if(!isSent){
+          return res.status(503).json({message : 'Cannot send mail,please try again later.'});
+       }
+
+       return res.status(200).json({message : 'OTP has been sended to the email, Please verify the OTP to enable the Two-Factor authentication.', userId : user._id});
+    }
+
+    const secret = generateSecret();
+    
+
+    //Update the changes in the database
+    user.twoFactorSecret = secret;
+    await user.save();
+
+    // Generate QR code URI for authenticator apps
+    const uri = generateURI({
+    issuer: "EcommerceBackendAPI",
+    label: user.username,
+    secret,
+    });
+
+    //Generate the actual scannable QR code image , which we send it as a backend response
+    const qrCodeImage = await qrcode.toDataURL(uri);
+
+
+    return res.status(200).json({
+      message : 'QR code generated successfully',
+      qrCodeImage
+    });
+
+
+  }catch(error){
+    if(error.name == 'CastError') return res.status(400).json({message : 'Data is provided in invalid format.'});
+
+    return res.status(500).json({message : 'Internal server error'});
+  }
+};
+
+export const verifySetup = async (req,res) => {
+  try{
+    const { OTP,type } = req.body;
+    const userId  = req.user.id;
+
+    //Important check
+    if(type !== 'EMAIL' && type !== 'APP'){
+      return res.status(400).json({message : 'Invalid Two-Factor Authentication type,Change the type to valid values mentioned in the docs and try again.'});
+    }
+
+    //Fetch the user
+    const user = await User.findById(userId).select('+twoFactorSecret +isTwoFactorEnabled');
+
+    //Important check -> 1
+    if(!user){
+      return res.status(404).json({message : 'User not found.'});
+    }
+
+    //Important check -> 2
+    if (user.isTwoFactorEnabled) {
+      return res.status(400).json({message: 'Two-Factor Authentication is already enabled.'});
+    }
+
+    if(type === 'EMAIL'){
+      const otpDoc = await Otp.findOne({
+        userId : userId,
+      });
+
+
+      //Important check
+      if(!otpDoc){
+        return res.status(404).json({message : 'There is no active otp for this user in the database.'});
+      }
+
+      const isValidOtp = await bcrypt.compare(String(OTP),otpDoc.otp);
+
+      if(!isValidOtp){
+        return res.status(400).json({message : 'Invalid Otp'});
+      }
+
+      await Otp.deleteOne({ _id: otpDoc._id });
+
+      
+
+    
+    }else if(type === 'APP'){
+      //Check if the OTP is valid
+    const isValid = verifySync({
+      token: String(OTP),
+      secret : user.twoFactorSecret
+    });
+    
+    if(!isValid.valid){
+      return res.status(400).json({message : 'Invalid OTP ! Please try again.'});
+    }
+    }
+
+
+    
+    
+
+    //If our program control reaches here which means OTP given in the request body is valid
+    user.isTwoFactorEnabled = true;
+    user.twoFactorType = type;
+    await user.save();
+
+    if(type == 'APP'){
+      return res.status(200).json({message : 'App-Based Two-Factor Authentication enabled successfully.'});
+    }else if(type == 'EMAIL'){
+      return res.status(200).json({message : 'Email-Based Two-Factor Authentication enabled successfully.'});
+    }
+
+    
+
+  }catch(error){ 
+    if(error.name == 'CastError') return res.status(400).json({message : 'Data is provided in the invalid format.'}); 
+    console.log(error);
+    return res.status(500).json({message : 'Internal Server Error'});
+  }
+};
+
+export const verifyOTP = async (req,res) => {
+try{
+    const { OTP, userId } = req.body;
+
+    //Fetch the user
+    const user = await User.findById(userId).select('+twoFactorSecret +isTwoFactorEnabled');
+
+    //Important check -> 1
+    if(!user){
+      return res.status(404).json({message : 'User not found'});
+    }
+
+    //Important check -> 2
+    if(!user.isTwoFactorEnabled){
+      return res.status(400).json({message : 'You cannot perform this action, as Two-Factor Authentication is not enabled.'});
+    }
+
+    //Email Otp verification branch
+    if(user.twoFactorType === 'EMAIL'){
+      
+      const otpDoc = await Otp.findOne({
+        userId : userId,
+      })
+
+
+      //Important check
+      if(!otpDoc){
+        return res.status(404).json({message : 'There is no active otp for this user in the database.'});
+      }
+      const isValidOtp = await bcrypt.compare(String(OTP),otpDoc.otp);
+
+      if(!isValidOtp){
+        return res.status(400).json({message : 'Invalid Otp'});
+      }
+      
+      await Otp.deleteOne({ _id: otpDoc._id });
+
+    //If control reaches here, then it confirms the fact that OTP given by user is valid
+
+
+    }else if(user.twoFactorType === 'APP'){
+    //Now check the OTP and if it is the valid OTP , then generate the JWT token and send it as the json response
+    const isValid = verifySync({
+      token : String(OTP),
+      secret : user.twoFactorSecret
+    });
+    
+
+    if(!isValid.valid){
+      return res.status(400).json({message : 'Invalid OTP, Please try again.'});
+    }
+    }
+
+    
+
+    //OTP Validation successful so, now just Generate the JWT and send it as the JSON response
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET_KEY,
+      { expiresIn: process.env.JWT_EXPIRES_IN }
+    );
+
+    //Success Response
+    return res.status(200).json({
+      message: 'Login successful!',
+      token: token,
+      user: {
+        _id: user._id,
+        role: user.role,
+        username: user.username,
+        email: user.email,
+        cart: user.cart
+      }
+    });
+   
+}catch(error){
+  if(error.name == 'CastError') return res.status(400).json({message : 'Data is provided in invalid format.'});
+
+  return res.status(500).json({message : 'Internal Server Error'});
+}
+};
+
 
 
 // //Generate a jwt token, and send that on the user email for verification
@@ -390,10 +659,6 @@ export const resetPassword = async (req, res) => {
 // return res.status(500).json({message : 'Internal Server Error'});
 // }
 // }
-
-
-
-
 
 
 export const googleCallback = (req, res) => {

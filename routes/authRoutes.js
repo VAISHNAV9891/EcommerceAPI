@@ -7,8 +7,12 @@ import {
     googleCallback,
     forgetPassword,
     resetPassword,
-    verifyEmail
+    verifyEmail,
+    enable2FA,
+    verifySetup,
+    verifyOTP
 } from '../controllers/auth.js'
+import {tokenVerifier} from '../middlewares/verifyToken.js'
 
 
 
@@ -28,7 +32,13 @@ router.get(
   googleCallback 
 );
 
+
 router.post('/forget-password', forgetPassword);
 router.post('/reset-password/:token', resetPassword);
+
+//2FA routes
+router.post('/enable-2FA', tokenVerifier, enable2FA);
+router.post('/verify2FA-setup', tokenVerifier, verifySetup);
+router.post('/verify-otp', verifyOTP);
 
 export default router;

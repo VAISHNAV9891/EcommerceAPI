@@ -9,7 +9,10 @@ const userSchema = new mongoose.Schema({
     cart : {type : mongoose.Schema.Types.ObjectId, ref : 'Cart'},
     googleId : {type : String, default : null},
     isDeleted : {type : Boolean, default : false},
-    isVerified : {type : Boolean, default : false}
+    isVerified : {type : Boolean, default : false},
+    twoFactorType : { enum : ['APP','EMAIL','NONE'], default : 'NONE'},
+    twoFactorSecret : {type : String, select : false, default : null},
+    isTwoFactorEnabled : {type : Boolean, select : false, default : false}
 },
 {timestamps : true, select : false}//Important Thing
 )
