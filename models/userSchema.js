@@ -10,7 +10,7 @@ const userSchema = new mongoose.Schema({
     googleId : {type : String, default : null},
     isDeleted : {type : Boolean, default : false},
     isVerified : {type : Boolean, default : false},
-    twoFactorType : { enum : ['APP','EMAIL','NONE'], default : 'NONE'},
+    twoFactorType : {type : String, enum : ['APP','EMAIL','NONE'], default : 'NONE'},
     twoFactorSecret : {type : String, select : false, default : null},
     isTwoFactorEnabled : {type : Boolean, select : false, default : false}
 },
