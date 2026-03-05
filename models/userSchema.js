@@ -17,7 +17,17 @@ const userSchema = new mongoose.Schema({
 {timestamps : true, select : false}//Important Thing
 )
 
-userSchema.index({email : 1});
+//Mongoose queries middleware
+userSchema.pre(/^find/, function (next) {
+  //Special check for admins controllers , when they want to filter and get the all deleted users i.e. where {isDeleted : true} from the database
+  if (this.getOptions().bypassSoftDelete) {
+    return next();
+  }
+
+  
+  this.find({ isDeleted: { $ne: true } });
+  next();
+});
 
 const User = mongoose.model('User',userSchema);
 

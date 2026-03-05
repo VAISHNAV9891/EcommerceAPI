@@ -16,8 +16,8 @@ import { checkOrderOwnership } from '../middlewares/authorizeMw.js'
 const orderRouter  = express.Router();
 
 
-orderRouter.post('/',tokenVerifier,placeOrder);
-orderRouter.get('/',tokenVerifier,getAllOrders);
+orderRouter.post('/place-order',tokenVerifier,placeOrder);
+orderRouter.get('/fetch-all-orders',tokenVerifier,getAllOrders);
 orderRouter.get('/:id',tokenVerifier,getSingleOrder);
 orderRouter.patch('/:id',tokenVerifier,isAdmin,updateOrderStatus);//Update order status -> Admin only
 orderRouter.patch('/:id/cancelOrderByAdmin',tokenVerifier,isAdmin,cancelOrder);//Cancel order -> Admin only using RBAC(Role-Based access control)

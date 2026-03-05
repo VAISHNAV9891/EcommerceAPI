@@ -14,16 +14,20 @@ import cors from 'cors'
 import passport from 'passport'
 import './config/passport.js';
 import ExpressMongoSanitize from 'express-mongo-sanitize'
-
+import cookieParser from 'cookie-parser'
 
 
 const app = express();//Make a server structure
 const PORT = process.env.PORT || 5000;
 const MONGO_URL = process.env.MONGO_URL;
 
-app.use(cors());
+app.use(cors({
+    origin: true, 
+    credentials: true 
+}));
 app.set('trust proxy', 1);
 
+app.use(cookieParser(process.env.COOKIE_SECRET));
 
 
 app.use('/api/webhook', webhookRouter);

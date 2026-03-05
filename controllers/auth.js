@@ -3,16 +3,18 @@ import Cart from '../models/cartSchema.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { sendMailService } from '../services/mailServices.js';
-import Token from '../models/tokenSchema.js';
+import Token from '../models/resetVerifyTokenSchema.js';
 import 'dotenv/config';//Import the variables from the .env file 
 import validator from 'email-validator';
 import crypto, { verify } from 'crypto';
 import { authLimiter } from '../middlewares/rateLimiters.js';
 import qrcode from 'qrcode';
 import { generateSecret, generateURI, verifySync } from 'otplib';
-import generateEmailOTP from '../services/otpServices.js';
+import generateEmailOTP from '../utils/generateOtp.js';
 import Otp from '../models/otpSchema.js';
-
+import { generateAuthTokens } from '../utils/generateTokens.js';
+import RefreshToken from '../models/RefreshTokenSchema.js';
+import 'dotenv/config';
 
 export const sign_up = async (req,res) => {
 try{
@@ -238,17 +240,12 @@ export const login = async (req, res) => {
     }
 
 
-    //Generate Token
-    const token = jwt.sign(
-      { id: user._id, role: user.role },
-      process.env.JWT_SECRET_KEY,
-      { expiresIn: process.env.JWT_EXPIRES_IN }
-    );
+    const accessToken = await generateAuthTokens(user,res);
 
     //Success Response
     return res.status(200).json({
-      message: 'Login successful!',
-      token: token,
+      message: 'Login successful',
+      accessToken: accessToken,
       user: {
         _id: user._id,
         role: user.role,
@@ -260,7 +257,7 @@ export const login = async (req, res) => {
 
   } catch (error) {
     if(error.name === 'CastError') return res.status(400).json({message : 'Data is provided in invalid format'});
-    res.status(500).json({ message: 'Internal server error', error: error.message });
+    return res.status(500).json({ message: 'Internal Server Error', error: error.message });
   }
 };
 
@@ -581,16 +578,12 @@ try{
     
 
     //OTP Validation successful so, now just Generate the JWT and send it as the JSON response
-    const token = jwt.sign(
-      { id: user._id, role: user.role },
-      process.env.JWT_SECRET_KEY,
-      { expiresIn: process.env.JWT_EXPIRES_IN }
-    );
+    const accessToken = await generateAuthTokens(user,res);
 
     //Success Response
     return res.status(200).json({
       message: 'Login successful!',
-      token: token,
+      accessToken: accessToken,
       user: {
         _id: user._id,
         role: user.role,
@@ -683,4 +676,135 @@ export const googleCallback = (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+export const getRefreshToken = async (req, res) => {
+  try {
+    const refreshToken = req.signedCookies.refreshToken;
+
+    if (!refreshToken) {
+      return res.status(401).json({ message: 'Tampered Token detected.' });
+    }
+
+    
+    const tokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
+    //Check if exists and it's not used, then mark as used immediately (Atomic operation for more security)
+    const tokenDoc = await RefreshToken.findOneAndUpdate(
+      { tokenHash: tokenHash, used: false }, 
+      { $set: { used: true } }, 
+      { new: true } // gives us the updated document
+    );
+
+    //If no document found with used: false, check if it was already used 
+    if (!tokenDoc) {
+
+      const reusedToken = await RefreshToken.findOne({ tokenHash });
+      //This check confirms that, for sure someone stealed this user token
+      if (reusedToken && reusedToken.used === true) {
+        await RefreshToken.deleteMany({ userId: reusedToken.userId });
+        
+        res.clearCookie('refreshToken',{
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        signed: true 
+        });
+    //To save the database resources/to avoid the unnecessary requests or queries that comes to our database
+        return res.status(403).json({ 
+          message: 'Security Alert: Suspicious session detected. All devices logged out.' 
+        });
+      }
+
+      return res.status(401).json({message: 'Provided token is expired or invalid.'});
+    }
+
+    //User Validation
+    const user = await User.findById(tokenDoc.userId);
+
+    if (!user) {
+      res.clearCookie('refreshToken',{
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        signed: true 
+      });
+      return res.status(404).json({ message: 'Cannot generate auth tokens for inactive user.' });
+    }
+
+    //Generate New Pair
+    const accessToken = await generateAuthTokens(user, res, tokenDoc);
+
+    return res.status(200).json({ 
+      message: 'Auth tokens generated successfully', 
+      accessToken 
+    });
+
+  } catch (error) {
+    if (error.name === 'CastError') return res.status(400).json({ message: 'Invalid data format.' });
+    return res.status(500).json({ message: 'Internal Server Error.' });
+  }
+};
+
+export const logout = async (req,res) => {
+try{
+  const refreshToken = req.signedCookies.refreshToken;
+
+  //If token not found
+  if(!refreshToken){
+    return res.status(200).json({ message: 'Logout successful' });
+  }
+
+  //Now hash the refresh token
+  const tokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
+  
+  //Find the token hash in the database
+  await RefreshToken.findOneAndDelete({ tokenHash });
+
+  //Now -> expire the session
+  res.clearCookie('refreshToken',{
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        signed: true 
+    });
+
+  return res.status(200).json({message : 'Logout successful'});
+
+}catch(error){
+  if(error.name == 'CastError') return res.status(400).json({message : 'Data is provided in invalid format'});
+  return res.status(500).json({message : 'Internal Server Error.'});
+}
+};
+
+export const terminateAllSessions = async (req, res) => {
+  try {
+    
+    const refreshToken = req.signedCookies.refreshToken;
+    
+    
+    if (!refreshToken) return res.status(200).json({ message: 'Already logged out : Please login again to terminate all your active sessions , if any.' });
+
+    
+    const tokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
+    const tokenDoc = await RefreshToken.findOne({ tokenHash });
+
+    
+    if (tokenDoc) {
+       await RefreshToken.deleteMany({ userId: tokenDoc.userId });
+    }
+
+    
+    res.clearCookie('refreshToken', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        signed: true
+    });
+
+    return res.status(200).json({ message: 'All sessions terminated successfully.' });
+
+  } catch (error) {
+    return res.status(500).json({ message: 'Internal Server Error.' });
+  }
+};
+
 

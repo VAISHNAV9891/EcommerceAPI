@@ -10,7 +10,10 @@ import {
     verifyEmail,
     enable2FA,
     verifySetup,
-    verifyOTP
+    verifyOTP,
+    getRefreshToken,
+    logout,
+    terminateAllSessions
 } from '../controllers/auth.js'
 import {tokenVerifier} from '../middlewares/verifyToken.js'
 
@@ -40,5 +43,8 @@ router.post('/reset-password/:token', resetPassword);
 router.post('/enable-2FA', tokenVerifier, enable2FA);
 router.post('/verify2FA-setup', tokenVerifier, verifySetup);
 router.post('/verify-otp', verifyOTP);
+router.get('/refresh-token', getRefreshToken);
+router.delete('/logout', logout);
+router.delete('/terminate-all-sessions', terminateAllSessions);
 
 export default router;
