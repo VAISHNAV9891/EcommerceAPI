@@ -5,7 +5,7 @@
     "description": "Complete Backend Documentation for Nexus E-Commerce",
     "version": "1.0.0"
   },
-  "host": "localhost:5000",
+  "host": "ecommerceapi-nh2j.onrender.com",
   "basePath": "/",
   "schemes": [
     "https"
