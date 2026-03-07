@@ -13,7 +13,7 @@ import { generateSecret, generateURI, verifySync } from 'otplib';
 import generateEmailOTP from '../utils/generateOtp.js';
 import Otp from '../models/otpSchema.js';
 import { generateAuthTokens } from '../utils/generateAuthTokens.js';
-import RefreshToken from '../models/RefreshTokenSchema.js';
+import RefreshToken from '../models/refreshTokenSchema.js';
 import 'dotenv/config';
 
 export const sign_up = async (req,res) => {

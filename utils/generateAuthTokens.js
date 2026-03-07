@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import 'dotenv/config'
-import RefreshToken from '../models/RefreshTokenSchema.js'; // Apne path ke hisaab se adjust kar lena
+import RefreshToken from '../models/refreshTokenSchema.js'; // Apne path ke hisaab se adjust kar lena
 
 
 export const generateAuthTokens = async (user, res, oldTokenDoc = null) => {
