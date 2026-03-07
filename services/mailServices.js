@@ -3,25 +3,33 @@ import 'dotenv/config';
 
 
 
-// export const transporter = nodemailer.createTransport({
-//   host: "smtp.sendgrid.net",
-//   port: 2525,
-//   secure: false,
-//   auth: {
-//     user: "apikey", 
-//     pass: process.env.SENDGRID_API_KEY,
-//   },
-// });
+export let transporter;
+
+if (process.env.NODE_ENV === 'production') {
+ 
+  transporter = nodemailer.createTransport({
+    host: "smtp.sendgrid.net",
+    port: 2525,
+    secure: false,
+    auth: {
+      user: "apikey", 
+      pass: process.env.SENDGRID_API_KEY,
+    },
+  });
+} else {
+  
+  transporter = nodemailer.createTransport({
+    service: 'gmail',
+    
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS
+    }
+  });
+}
 
 
-export const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  port: 2525,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
+
 
 
 export const sendMailService = async (data, to, purpose) => {
