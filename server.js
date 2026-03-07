@@ -15,6 +15,7 @@ import passport from 'passport';
 import './config/passport.js';
 import ExpressMongoSanitize from 'express-mongo-sanitize';
 import cookieParser from 'cookie-parser';
+import fs from 'fs';
 import swaggerUi from 'swagger-ui-express';
 
 
