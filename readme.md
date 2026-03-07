@@ -9,7 +9,7 @@
 ## 🚀 Live Demonstration
 
 * **🌐 Live Server (Render):** https://ecommerceapi-nh2j.onrender.com
-* **📄 API Documentation (Postman):** https://documenter.getpostman.com/view/49589178/2sB3dQwVnx
+* **📄 API Documentation (swagger):** https://ecommerceapi-nh2j.onrender.com/api-docs
 
 ---
 
