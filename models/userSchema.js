@@ -12,7 +12,8 @@ const userSchema = new mongoose.Schema({
     isVerified : {type : Boolean, default : false},
     twoFactorType : {type : String, enum : ['APP','EMAIL','NONE'], default : 'NONE'},
     twoFactorSecret : {type : String, select : false, default : null},
-    isTwoFactorEnabled : {type : Boolean, select : false, default : false}
+    isTwoFactorEnabled : {type : Boolean, select : false, default : false},
+    accountStatus : {type : String, enum : ['ACTIVE','FREEZE'], default : 'ACTIVE'}
 },
 {timestamps : true, select : false}//Important Thing
 )

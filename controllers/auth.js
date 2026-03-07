@@ -3,7 +3,7 @@ import Cart from '../models/cartSchema.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { sendMailService } from '../services/mailServices.js';
-import Token from '../models/resetVerifyTokenSchema.js';
+import Token from '../models/tokenSchema.js';
 import 'dotenv/config';//Import the variables from the .env file 
 import validator from 'email-validator';
 import crypto, { verify } from 'crypto';
@@ -12,7 +12,7 @@ import qrcode from 'qrcode';
 import { generateSecret, generateURI, verifySync } from 'otplib';
 import generateEmailOTP from '../utils/generateOtp.js';
 import Otp from '../models/otpSchema.js';
-import { generateAuthTokens } from '../utils/generateTokens.js';
+import { generateAuthTokens } from '../utils/generateAuthTokens.js';
 import RefreshToken from '../models/RefreshTokenSchema.js';
 import 'dotenv/config';
 
@@ -205,6 +205,12 @@ export const login = async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
+    if (user.accountStatus === 'FREEZE') {
+      return res.status(403).json({ 
+        message: 'Your account has been frozen for security reasons. Please reset your password to unlock it.' 
+      });
+    }
+
     //User validation successful, so now reset the rate-limiter counter for this user
     authLimiter.resetKey(req.ip);
 
@@ -306,7 +312,7 @@ export const forgetPassword = async (req, res) => {
 
     
 
-    const isSent = await sendMailService(link, user.email, 'RESET_PASSWORD');
+    const isSent = sendMailService(link, user.email, 'RESET_PASSWORD');
 
     if(!isSent){
       return res.status(503).json({message : 'Cannot send mail,please try again later.'});
@@ -316,7 +322,7 @@ export const forgetPassword = async (req, res) => {
       message: 'If the account exists, a reset email has been sent'
     });
   } catch (err) {
-    console.error(err);
+    if(err.name === 'CastError') return res.status(400).json({message : 'Data is provided in invalid format.'});
     return res.status(500).json({ message: 'Internal Server Error' });
   }
 };
@@ -325,6 +331,11 @@ export const resetPassword = async (req, res) => {
   try {
     const { token } = req.params;
     const { newPassword, confirmPassword } = req.body;
+
+    //Important check
+    if(!token){
+      return res.status(400).json({message : 'Server need a valid token to proceed futher.'});
+    }
 
     //Validate fields
     if (!newPassword || !confirmPassword) {
@@ -354,6 +365,10 @@ export const resetPassword = async (req, res) => {
     const user = await User.findById(tokenDoc.userId);
     const salt = await bcrypt.genSalt(10);
 
+    if(!user){
+      return res.status(404).json({message : 'User Not Found.'});
+    }
+
     const hashedPassword = await bcrypt.hash(newPassword,salt);
     user.password = hashedPassword; // Save the hashed password in the database -> Best practice
     await user.save();
@@ -362,9 +377,28 @@ export const resetPassword = async (req, res) => {
     tokenDoc.used = true;
     await tokenDoc.save();
 
+    //Now, send the email to the user, with the link to recover their account
+    const recoverToken = crypto.randomBytes(30).toString('hex');
+    const hashedRecoveredToken = crypto.createHash('sha256').update(recoverToken).digest('hex');
+    
+    await Token.create({
+      userId: user._id,
+      tokenHash: hashedRecoveredToken,
+      purpose: 'SECURE_ACCOUNT',
+      expiresAt: Date.now() + 15 * 60 * 1000
+    });
+
+
+    const prefix =  process.env.FRONTEND_URL || 'https://ecommerceapi-nh2j.onrender.com';
+    const link = `${prefix}api/auth/recover-your-account/${recoverToken}`;
+
+    sendMailService(link,user.email,'SECURE_ACCOUNT');
+
+    
+    
     return res.status(200).json({ message: 'Password reset successful' });
   } catch (err) {
-    console.error(err);
+    if(err.name === 'CastError') return res.status(400).json({message : 'Data is provided in invalid format.'});
     return res.status(500).json({ message: 'Internal Server Error' });
   }
 };
@@ -401,7 +435,7 @@ export const enable2FA = async (req,res) => {
        });
 
        //Send the otp to this user on the email
-       const isSent = await sendMailService(otp,user.email,'TWO_FACTOR_AUTH');
+       const isSent = endMailService(otp,user.email,'TWO_FACTOR_AUTH');
 
        if(!isSent){
           return res.status(503).json({message : 'Cannot send mail,please try again later.'});
@@ -580,6 +614,9 @@ try{
     //OTP Validation successful so, now just Generate the JWT and send it as the JSON response
     const accessToken = await generateAuthTokens(user,res);
 
+    //User validation successful, so now reset the rate-limiter counter for this user
+    authLimiter.resetKey(req.ip);
+
     //Success Response
     return res.status(200).json({
       message: 'Login successful!',
@@ -600,58 +637,6 @@ try{
 }
 };
 
-
-
-// //Generate a jwt token, and send that on the user email for verification
-// export const forgetPassword = async (req,res) => {
-// try{
-// const unique = req.body;//This field can get either email or username
-
-// if(unique.email){//Important validation check
-//     const isValid = validator.validate(unique.email);
-//     if(!isValid) return res.status(400).json({message : 'Email is not in valid format.'});
-// }
-
-
-// if(!unique.email && !unique.username){//Important check 
-//     return res.status(400).json({message : 'This field cannot be empty'});
-// }
-
-
-
-// const user = await User.findOne({
-//     $or : [{username : unique.username},{email : unique.email}]
-// });
-
-
-// if(!user){
-//     return res.status(200).json({message : 'If account exists, then email is successfully sended on the registered email'});
-// }
-
-// //Make a JWT token
-// const token = jwt.sign(
-//     {_id : user._id, type: 'RESET_PASSWORD'},
-//     process.env.JWT_SECRET_RESET,
-//     {expiresIn : process.env.JWT_EXPIRES_IN_RESET}
-// )
-
-// //Make a link and embedded this token in the link
-// const domain = `http://localhost:5000`;
-// const link = `${domain}/api/auth/resetPasswordReq/${token}`;
-
-// //Send the mail via nodemailer
-// await sendMailService(link,user.email);
-
-// return res.status(200).json({message : 'If account exists, then email is successfully sended on the registered email'});
-
-
-// }catch(error){
-// if(error.name === 'CastError'){
-//     return res.status(400).json({message : 'Data is provided in the invalid format'});
-// }
-// return res.status(500).json({message : 'Internal Server Error'});
-// }
-// }
 
 
 export const googleCallback = (req, res) => {
@@ -807,4 +792,106 @@ export const terminateAllSessions = async (req, res) => {
   }
 };
 
+export const recoverAccount = async (req,res) => {
+try{
+  //Take out the token from the link
+  const token = req.params.recoverToken;
+  
+  //Important check
+  if(!token){
+    return res.status(400).json({message : 'Server need a valid token to proceed further.'});
+  }
+
+  //Hash the token
+  const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+  //Try to find out the token in the database (using atomic locks to handle race conditions and in this case using atomic locks saves some DB resources)
+  //Atomic operations : only one request can go in the data base for searching and updating and every other request wait outside , will go inside once the first request complete it's DB operation.
+  const tokenDoc = await Token.findOneAndUpdate({
+    tokenHash: hashedToken,
+    purpose: 'SECURE_ACCOUNT',
+    used: false,
+    expiresAt: { $gt: Date.now() }
+  },{used : true},{new : true});
+
+  //If not found, send a 400 response
+  if(!tokenDoc){
+    return res.status(400).json({message : 'Invalid or expired token.'});
+  }
+
+
+  const user = await User.findOneAndUpdate({_id : tokenDoc.userId},{accountStatus : 'FREEZE'},{new : true});
+
+  if(!user){
+    return res.status(404).json({message : 'User Not Found.'});
+  }
+  
+  //Terminate all sessions of this user
+  await RefreshToken.deleteMany({userId : tokenDoc.userId});
+
+  const frozenResetToken = crypto.randomBytes(32).toString('hex');
+  const hashedFrozenResetToken = crypto.createHash('sha256').update(frozenResetToken).digest('hex');
+
+  await Token.create({
+    userId : user._id,
+    tokenHash : hashedFrozenResetToken,
+    purpose : 'RESET_FROZEN_ACCOUNT',
+    expiresAt: Date.now() + 15 * 60 * 1000
+  }) 
+
+  return res.status(200).json({
+    message : 'Logout successful from all devices. Account frozen. Hit the api route now with this frozen-reset-token, to set a new password and activate user account',
+    token : frozenResetToken
+  });
+
+}catch(error){
+  if(error.name === 'CastError') return res.status(400).json({message : 'Data is provided in invalid format.'});
+  return res.status(500).json({message : 'Internal Server Error.'});
+}
+};
+
+export const resetFrozenAccountPassword = async(req,res) => {
+try{
+  const { token,newPassword,confirmPassword } = req.body;
+
+  if(!token) return res.status(400).json({message : 'A valid token is required to perform this action.'});
+
+  if(newPassword !== confirmPassword){
+    return res.status(400).json({message : 'Both passwords does not match.'});
+  }
+  const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+  //Atomic DB operations
+  const tokenDoc = await Token.findOneAndUpdate({
+    tokenHash : hashedToken,
+    purpose : 'RESET_FROZEN_ACCOUNT',
+    used: false,
+    expiresAt: { $gt: Date.now() }
+  },{used : true},{new : true});
+
+  if(!tokenDoc) return res.status(400).json({message : 'Invalid or expired token.'});
+  
+  await Token.findByIdAndDelete(tokenDoc._id);
+  
+  //If the control reaches here -> which confirms that the provided token is valid and original user/frontend is making request to set a new password 
+  
+
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(newPassword,salt);
+
+  const user = await User.findOneAndUpdate({_id : tokenDoc.userId},{password : hashedPassword,accountStatus : 'ACTIVE'},{new : true});
+
+  if(!user) return res.status(404).json({message : 'User Not Found.'});
+
+  
+
+  return res.status(200).json({message : 'Password updated successfully.'});
+
+}catch(error){
+
+
+  if(error.name === 'CastError') return res.status(400).json({message : 'Data is provided in invalid format.'});
+  return res.status(500).json({message : 'Internal Sever Error.'});
+}
+};
 

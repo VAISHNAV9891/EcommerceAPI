@@ -13,7 +13,7 @@ const tokenSchema = new mongoose.Schema({
   },
   purpose: {
     type: String,
-    enum: ['RESET_PASSWORD', 'EMAIL_VERIFY'],
+    enum: ['RESET_PASSWORD', 'EMAIL_VERIFY', 'SECURE_ACCOUNT', 'RESET_FROZEN_ACCOUNT'],
     required: true
   },
   expiresAt: {

@@ -13,7 +13,9 @@ import {
     verifyOTP,
     getRefreshToken,
     logout,
-    terminateAllSessions
+    terminateAllSessions,
+    recoverAccount,
+    resetFrozenAccountPassword
 } from '../controllers/auth.js'
 import {tokenVerifier} from '../middlewares/verifyToken.js'
 
@@ -46,5 +48,7 @@ router.post('/verify-otp', verifyOTP);
 router.get('/refresh-token', getRefreshToken);
 router.delete('/logout', logout);
 router.delete('/terminate-all-sessions', terminateAllSessions);
+router.post('/recover-your-account/:recoverToken', recoverAccount);
+router.post('/reset-frozen-password', resetFrozenAccountPassword);
 
 export default router;
