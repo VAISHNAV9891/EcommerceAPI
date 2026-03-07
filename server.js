@@ -1,25 +1,29 @@
-import express from 'express'
-import mongoose from 'mongoose'
+import express from 'express';
+import mongoose from 'mongoose';
 import 'dotenv/config'//Import the variables from .env file
-import productRouter from './routes/productRoutes.js'
-import orderRouter from './routes/orderRoutes.js'
-import authRouter from './routes/authRoutes.js'
-import reviewRouter from './routes/reviewRoutes.js'
-import paymentRouter from './routes/paymentRoutes.js'
-import webhookRouter from './routes/webhookRoutes.js'
-import cartRouter from './routes/cartRoutes.js'
-import userRouter from './routes/userRoutes.js'
-import { authLimiter, paymentLimiter, generalLimiter } from './middlewares/rateLimiters.js'
-import cors from 'cors'
-import passport from 'passport'
+import productRouter from './routes/productRoutes.js';
+import orderRouter from './routes/orderRoutes.js';
+import authRouter from './routes/authRoutes.js';
+import reviewRouter from './routes/reviewRoutes.js';
+import paymentRouter from './routes/paymentRoutes.js';
+import webhookRouter from './routes/webhookRoutes.js';
+import cartRouter from './routes/cartRoutes.js';
+import userRouter from './routes/userRoutes.js';
+import { authLimiter, paymentLimiter, generalLimiter } from './middlewares/rateLimiters.js';
+import cors from 'cors';
+import passport from 'passport';
 import './config/passport.js';
-import ExpressMongoSanitize from 'express-mongo-sanitize'
-import cookieParser from 'cookie-parser'
+import ExpressMongoSanitize from 'express-mongo-sanitize';
+import cookieParser from 'cookie-parser';
+import swaggerUi from 'swagger-ui-express';
 
 
-const app = express();//Make a server structure
+const app = express();
+const swaggerDocument = JSON.parse(fs.readFileSync('./swagger-output.json', 'utf-8'));
 const PORT = process.env.PORT || 5000;
 const MONGO_URL = process.env.MONGO_URL;
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.use(cors({
     origin: true, 
